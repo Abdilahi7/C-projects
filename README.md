@@ -1,2 +1,185 @@
-# C-projects
-All my C# projects 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Developer Role Quiz</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 800px;
+      margin: auto;
+      padding: 20px;
+      background: linear-gradient(to right, #e0f7fa, #ffffff);
+      animation: fadeIn 1s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h2 {
+      color: #0077cc;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .question {
+      margin-bottom: 30px;
+      padding: 15px;
+      background-color: #f1f8ff;
+      border-left: 4px solid #0077cc;
+      border-radius: 5px;
+      animation: fadeIn 0.5s ease forwards;
+    }
+
+    label {
+      display: block;
+      margin: 8px 0;
+      cursor: pointer;
+    }
+
+    input[type="text"] {
+      padding: 8px;
+      width: 100%;
+      margin-top: 5px;
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    button[type="submit"] {
+      background-color: #0077cc;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      display: block;
+      margin: auto;
+    }
+
+    button[type="submit"]:hover {
+      background-color: #005fa3;
+    }
+
+    .result {
+      margin-top: 30px;
+      font-weight: bold;
+      font-size: 1.4em;
+      color: green;
+      text-align: center;
+      animation: fadeIn 1s ease;
+    }
+  </style>
+</head>
+<body>
+  <h2>🧠 Discover Your Developer Role</h2>
+  <form id="quizForm">
+    <label>
+      Full Name:
+      <input type="text" name="fullName" required>
+    </label>
+
+    <div id="questions"></div>
+
+    <button type="submit">🚀 Submit Quiz</button>
+  </form>
+
+  <div class="result" id="result"></div>
+
+  <script>
+    const questions = [
+      "What do you enjoy doing most?",
+      "If your team is stuck on a task, what do you do?",
+      "Which tool or task feels natural to you?",
+      "How do you prefer to learn something new?",
+      "What’s your biggest strength in a team?",
+      "How do you feel about fixing bugs?",
+      "What would you rather do during a project kickoff?",
+      "What makes a project successful?",
+      "What frustrates you the most?",
+      "What do you do first when assigned a new task?",
+      "What do people say you’re good at?",
+      "Which task sounds more fun?",
+      "What do you usually do in group projects?",
+      "How do you organize your work?",
+      "What’s your dream job role?"
+    ];
+
+    const roles = ["programmer", "designer", "documentation", "database", "tester", "teamlead"];
+
+    const labels = [
+      "Writing code and solving logic problems",
+      "Making things look nice and easy to use",
+      "Explaining how things work",
+      "Organizing data and making it accessible",
+      "Finding and fixing mistakes",
+      "Guiding and supporting a team"
+    ];
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    const questionContainer = document.getElementById("questions");
+    const shuffledQuestions = shuffle(questions.map((text, index) => ({ text, index })));
+
+    shuffledQuestions.forEach(({ text, index }, i) => {
+      const div = document.createElement("div");
+      div.className = "question";
+      div.innerHTML = `<p><strong>Q${i + 1}:</strong> ${text}</p>`;
+      labels.forEach((label, j) => {
+        div.innerHTML += `
+          <label><input type="radio" name="q${index}" value="${roles[j]}" required> ${label}</label>
+        `;
+      });
+      questionContainer.appendChild(div);
+    });
+
+    document.getElementById("quizForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+
+      const formData = new FormData(e.target);
+      const name = formData.get("fullName");
+      const scores = { programmer: 0, designer: 0, documentation: 0, database: 0, tester: 0, teamlead: 0 };
+
+      for (let [key, value] of formData.entries()) {
+        if (value in scores) {
+          scores[value]++;
+        }
+      }
+
+      const topRole = Object.entries(scores).sort((a, b) => b[1] - a[1])[0][0];
+      const resultText = `${name}, you are best suited for the role of: ${topRole.toUpperCase()}`;
+      document.getElementById("result").innerText = resultText;
+
+      const payload = {
+        name: name,
+        role: topRole,
+        scores: scores,
+        timestamp: new Date().toISOString()
+      };
+
+      try {
+        await fetch("https://sheet.best/api/sheets/YOUR_SHEET_ID", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+      } catch (error) {
+        console.error("Failed to save result:", error);
+      }
+    });
+  </script>
+</body>
+</html>
+
